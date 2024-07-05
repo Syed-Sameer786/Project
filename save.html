@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Coding Website</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .code-container {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #f9f9f9;
+    }
+    .code-container pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin-bottom: 5px;
+    }
+    .code-container .timestamp {
+      font-size: 0.8em;
+      color: #666;
+    }
+    .delete-button {
+      color: #f44336;
+      cursor: pointer;
+      float: right;
+    }
+  </style>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, set, get, child, push, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyA5lXpYjqm7CJ2srALogoheOmyOPHDCeFk",
+      authDomain: "codeeditor-42707.firebaseapp.com",
+      databaseURL: "https://codeeditor-42707-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "codeeditor-42707",
+      storageBucket: "codeeditor-42707.appspot.com",
+      messagingSenderId: "457710763380",
+      appId: "1:457710763380:web:2ffa80b9abe91c99b9c021"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    window.addEventListener('load', function() {
+      displayCodes();
+    });
+
+    function saveCode() {
+      const code = document.getElementById('codeInput').value;
+      const codeId = push(ref(database, 'codes')).key;
+
+      set(ref(database, 'codes/' + codeId), {
+        code: code,
+        timestamp: new Date().toISOString()
+      }).then(() => {
+        alert('Code saved successfully!');
+        displayCodes();
+      }).catch(error => {
+        console.error('Error saving code:', error);
+      });
+    }
+
+    function displayCodes() {
+      const dbRef = ref(database, 'codes');
+      get(dbRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const codes = snapshot.val();
+          const codesList = document.getElementById('codesList');
+
+          codesList.innerHTML = '';
+          for (let id in codes) {
+            if (Object.prototype.hasOwnProperty.call(codes, id)) {
+              const code = codes[id].code;
+              const timestamp = codes[id].timestamp;
+
+              const codeElement = document.createElement('div');
+              codeElement.classList.add('code-container');
+              codeElement.innerHTML = `
+                <pre>${code}</pre>
+                <p class="timestamp">Saved on: ${timestamp}</p>
+                <span class="delete-button" onclick="deleteCode('${id}')">Delete</span>
+              `;
+              codesList.appendChild(codeElement);
+            }
+          }
+        } else {
+          console.log("No data available");
+        }
+      }).catch(error => {
+        console.error('Error retrieving codes:', error);
+      });
+    }
+
+    function deleteCode(codeId) {
+      if (confirm("Are you sure you want to delete this code?")) {
+        remove(ref(database, 'codes/' + codeId)).then(() => {
+          alert('Code deleted successfully!');
+          displayCodes();
+        }).catch(error => {
+          console.error('Error deleting code:', error);
+        });
+      }
+    }
+
+    // Attach functions to the window object to make them accessible globally
+    window.saveCode = saveCode;
+    window.displayCodes = displayCodes;
+    window.deleteCode = deleteCode;
+  </script>
+</head>
+<body>
+  <h1>Coding Website</h1>
+  <textarea id="codeInput" placeholder="Enter your code here..."></textarea>
+  <button onclick="saveCode()">Save Code</button>
+  <h2>Saved Codes</h2>
+  <div id="codesList"></div>
+</body>
+</html>
